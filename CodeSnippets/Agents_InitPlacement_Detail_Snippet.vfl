@@ -1,0 +1,41 @@
+/*
+__version__ = '0.1'
+__date__ = '03-12-2019'
+__author__ = 'Shervin Azadi'
+*/
+
+//get the number of functions
+int nfunc = npoints(1);
+
+//initialize the variables
+float max_wp[] = point(0, "wp", 0);
+int max_id[];
+for (int j=0; j<nfunc; j++) append(max_id, 0);
+
+//FIND THE MAX WP
+
+//iterate over voxels
+for (int i=0; i<@numpt; i++) 
+{
+    //retrieve the weighted product attribute
+    float wp[] = point(0, "wp", i);
+    //iterate over the functions
+    for (int j=0; j<nfunc; j++) 
+    {
+        //compare the temporary max with the wp value
+        if (wp[j] > max_wp[j])
+        {
+            //if wp was bigger set it as the new max
+            max_wp[j] = wp[j];
+            //save its id as the max_id
+            max_id[j] = i;
+        }
+    }
+}
+
+//iterate over the max points
+for (int j=0; j<nfunc; j++) 
+{
+    setpointattrib(0, "parent", max_id[j], j, "set");
+    setpointgroup(0, "occupied", max_id[j], 1, "set");
+}

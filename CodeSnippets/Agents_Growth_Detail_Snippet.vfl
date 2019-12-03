@@ -1,0 +1,72 @@
+/*
+__version__ = '0.1'
+__date__ = '03-12-2019'
+__author__ = 'Shervin Azadi'
+*/
+
+// 0: initialize variables
+int nfunc = npoints(1);
+float squarness = chf("squarness");
+
+// 1: iterate over each function (agent)
+for (int j=0; j<nfunc; j++)
+{
+    // 1.1: check if the function(agent) have enough voxels
+    //current area
+    int cur_area = findattribvalcount(0, "point", "parent", j);
+    //desired area
+    int des_area = point(1, "area", j);
+    //compare current with desired
+    if (des_area > cur_area )
+    {
+        // 1.2: prepare children to find the boundary of function
+        //get the number of children
+        int num_child = findattribvalcount(0, "point", "parent", j);
+        //initialize the boundary list
+        int func_bounds_id[];
+        float func_bounds_wp[];
+        // 1.3: iterate over children 
+        for (int i=0; i<num_child; i++)
+        {
+            // 1.3.1: find the neighbours of the child
+            //retrieve the child id
+            int child_id = findattribval(0, "point", "parent", j, i);
+            //retrieve the child neighbours
+            int child_neighs[] = neighbours(0, child_id);
+
+            // 1.3.2: iterate over the neighbours of the child
+            foreach (int neigh; child_neighs)
+            {
+                //1.3.2.1: check if they are occupied
+                if (1 - inpointgroup(0, "occupied", neigh))
+                {
+                    //find it in the currently existing boundary list 
+                    int found = find(func_bounds_id, neigh);
+                    //if you did not find it add it to the list
+                    if (found < 0)
+                    {
+                        // add the id
+                        append(func_bounds_id, neigh);
+                        // add the wp
+                        float wp[] = point(0, "wp", neigh);
+                        append(func_bounds_wp, wp[j]);
+
+                    }
+                    //if you found it increase the wp by the "squarness" ratio
+                    else
+                    {
+                        //multiply by squarness factor
+                        func_bounds_wp[found] *= squarness;
+                    }
+                }
+            }
+        }
+        // 1.3: sort the list of boundary voxels in decreasing order
+        int sorted_indicies[] = reverse(argsort(func_bounds_wp));
+        func_bounds_id = reorder(func_bounds_id, sorted_indicies);
+
+        // 1.4: set the first voxel in the (sorted) boundary list as the new child (occupy it by the function)
+        setpointgroup(0, "occupied", func_bounds_id[0], 1, "set");
+        setpointattrib(0, "parent", func_bounds_id[0], j, "set");
+    }
+}
